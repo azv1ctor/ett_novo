@@ -1,4 +1,3 @@
-// src/models/Usuario.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Empresa } from './Empresa';
 import { GrupoEmpresarial } from './GrupoEmpresarial';
@@ -30,6 +29,6 @@ export class Usuario {
 
   // Relacionamento com GrupoEmpresarial
   @ManyToOne(() => GrupoEmpresarial, (grupo) => grupo.usuarios, { nullable: true })
-  @JoinColumn({ name: 'grupo_empresarial_id' })
-  grupo_empresarial!: GrupoEmpresarial;  
+  @JoinColumn({ name: 'grupo_empresarial_id' }) // Garante que o nome da coluna seja mapeado corretamente
+  grupo_empresarial?: GrupoEmpresarial;
 }

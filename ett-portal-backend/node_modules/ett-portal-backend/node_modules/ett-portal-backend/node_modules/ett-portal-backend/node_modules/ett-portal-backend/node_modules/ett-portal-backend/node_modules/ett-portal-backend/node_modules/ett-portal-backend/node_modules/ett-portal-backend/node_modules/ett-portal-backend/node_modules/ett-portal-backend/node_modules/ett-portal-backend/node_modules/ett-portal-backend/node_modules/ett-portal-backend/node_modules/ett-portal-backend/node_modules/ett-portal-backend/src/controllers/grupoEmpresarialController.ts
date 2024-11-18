@@ -150,32 +150,32 @@ export const excluirGrupoEmpresarial = async (req: Request, res: Response) => {
   }
 };
 
-export const dessassociarEmpresaDoGrupo = async (req: Request, res: Response) => {
+export const dessassociarEmpresaDoGrupo = async (req: Request, res: Response): Promise<void> => {
   try {
-      const { grupoEmpresarialId, parceiroId } = req.body;
-      console.log("IDs recebidos para dessassociação:", { grupoEmpresarialId, parceiroId });
+    console.log('Payload recebido para desassociação:', req.query);
+    const { id } = req.query; // Receba o ID específico do registro
 
-      if (!grupoEmpresarialId || isNaN(Number(grupoEmpresarialId)) || !parceiroId || isNaN(Number(parceiroId))) {
-          console.error("Erro: IDs inválidos recebidos", { grupoEmpresarialId, parceiroId });
-          return res.status(400).json({ message: 'IDs inválidos' });
-      }
+    if (!id) {
+      res.status(400).json({ message: 'O ID do registro é obrigatório para desassociar' });
+      return;
+    }
 
-      const result = await AppDataSource.getRepository(ControleAcessoParceiroGrupo)
-          .createQueryBuilder()
-          .delete()
-          .from(ControleAcessoParceiroGrupo)
-          .where("grupo_empresarial_id = :grupoEmpresarialId", { grupoEmpresarialId: Number(grupoEmpresarialId) })
-          .andWhere("parceiro_id = :parceiroId", { parceiroId: Number(parceiroId) })
-          .execute();
+    const repository = AppDataSource.getRepository(ControleAcessoParceiroGrupo);
+    const associacao = await repository.findOne({
+      where: { id: Number(id) }, // Agora busca pelo ID do registro
+    });
 
-      if (result.affected === 0) {
-          return res.status(404).json({ message: 'Associação não encontrada' });
-      }
+    if (!associacao) {
+      res.status(404).json({ message: 'Associação não encontrada' });
+      return;
+    }
 
-      res.status(200).json({ message: 'Empresa dessassociada com sucesso' });
+    await repository.remove(associacao);
+
+    res.status(200).json({ message: 'Parceiro desassociado com sucesso' });
   } catch (error) {
-      console.error('Erro ao dessassociar empresa do grupo:', error);
-      res.status(500).json({ message: 'Erro ao dessassociar empresa do grupo' });
+    console.error('Erro ao desassociar parceiro:', error);
+    res.status(500).json({ message: 'Erro ao desassociar parceiro' });
   }
 };
 
@@ -226,5 +226,33 @@ export const listarGruposEmpresariaisParaSelect = async (req: Request, res: Resp
   } catch (error) {
     console.error('Erro ao listar grupos empresariais:', error);
     res.status(500).json({ message: 'Erro ao listar grupos empresariais' });
+  }
+};
+
+export const desassociarParceiro = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { grupo_empresarial_id, parceiro_id } = req.body;
+
+    if (!grupo_empresarial_id || !parceiro_id) {
+      res.status(400).json({ message: 'IDs do grupo empresarial e do parceiro são obrigatórios' });
+      return;
+    }
+
+    const repository = AppDataSource.getRepository(ControleAcessoParceiroGrupo);
+    const associacao = await repository.findOne({
+      where: { grupo_empresarial_id, parceiro_id },
+    });
+
+    if (!associacao) {
+      res.status(404).json({ message: 'Associação não encontrada' });
+      return;
+    }
+
+    await repository.remove(associacao);
+
+    res.status(200).json({ message: 'Parceiro desassociado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao desassociar parceiro:', error);
+    res.status(500).json({ message: 'Erro ao desassociar parceiro' });
   }
 };

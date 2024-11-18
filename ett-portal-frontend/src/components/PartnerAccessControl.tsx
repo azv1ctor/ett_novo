@@ -68,27 +68,23 @@ const PartnerAccessControl: React.FC = () => {
     }
   };
 
-  const disassociatePartnerFromGroup = async (partnerId: number) => {
-    if (!selectedGroupId || isNaN(Number(selectedGroupId)) || isNaN(Number(partnerId))) {
-        console.error("ID inválido detectado", { selectedGroupId, partnerId });
-        alert("Erro: IDs inválidos detectados para desassociar.");
-        return;
-    }
-
+  const disassociatePartnerFromGroup = async (id: number) => {
     try {
-        await axios.delete('http://localhost:5000/api/grupo-empresarial/dessassociar', {
-            data: {
-                grupoEmpresarialId: Number(selectedGroupId),
-                parceiroId: Number(partnerId),
-            },
-        });
-        setPartners(partners.filter((partner) => partner.id !== partnerId));
+      const response = await axios.delete('http://localhost:5000/api/grupo-empresarial/desassociar', {
+        params: {
+          id, // Envie o ID específico do registro
+        },
+      });
+  
+      alert('Parceiro desassociado com sucesso!');
+      // Remova o parceiro da lista no estado do frontend
+      setPartners((prevPartners) => prevPartners.filter((partner) => partner.id !== id));
     } catch (error) {
-        console.error('Erro ao dessassociar parceiro do grupo', error);
-        alert('Erro ao dessassociar parceiro do grupo.');
+      console.error('Erro ao desassociar parceiro do grupo:', error);
+      alert('Erro ao desassociar parceiro. Verifique os dados e tente novamente.');
     }
-};
-
+  };
+  
 
   // Filtro e Paginação para Empresas Disponíveis
   const filteredPartners = availablePartners.filter((partner) =>
@@ -137,13 +133,16 @@ const PartnerAccessControl: React.FC = () => {
               <td className="border-b p-2">{partner.nome_parceiro}</td>
               <td className="border-b p-2">{partner.status_acesso ? 'Ativo' : 'Desativado'}</td>
               <td className="border-b p-2">
-                <button
-                  onClick={() => disassociatePartnerFromGroup(partner.id)}
-                  className="px-4 py-2 bg-red-500 text-white rounded"
-                >
-                  Dessassociar
-                </button>
-              </td>
+              <button
+  onClick={() => disassociatePartnerFromGroup(partner.id)} // Passe o ID correto
+  className="px-4 py-2 bg-red-500 text-white rounded"
+>
+  Dessassociar
+</button>
+
+
+</td>
+
             </tr>
           ))}
         </tbody>
